@@ -30,7 +30,11 @@ export class ScoringController {
 
   @Get('me/result')
   getForCurrentCandidate() {
-    return { message: 'Auth required for this endpoint — will be re-enabled with full auth flow' };
+    return {
+      message: 'SkillBridge score engine and tier is live',
+      status: 'ok',
+      note: 'Authentication is currently disabled for this MVP deployment.',
+    };
   }
 
   @Get(':candidateId')

@@ -1,4 +1,4 @@
-import { Logger, ValidationPipe } from '@nestjs/common';
+import { Logger, RequestMethod, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import type { Request, Response } from 'express';
@@ -10,7 +10,11 @@ type ExpressHandler = (req: Request, res: Response) => void;
 let cachedServer: ExpressHandler | null = null;
 
 function getMissingRequiredEnvVars(): string[] {
-  const requiredVars = ['DB_HOST', 'DB_PORT', 'DB_PASSWORD', 'JWT_SECRET'];
+  const hasDbUrl = Boolean(process.env.DB_URL && process.env.DB_URL.trim() !== '');
+  const requiredVars = hasDbUrl
+    ? ['JWT_SECRET']
+    : ['DB_HOST', 'DB_PORT', 'DB_PASSWORD', 'JWT_SECRET'];
+
   return requiredVars.filter((name) => !process.env[name] || process.env[name]?.trim() === '');
 }
 
@@ -28,7 +32,12 @@ async function createServer(): Promise<ExpressHandler> {
   const server = express();
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
 
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api', {
+    exclude: [
+      { path: '', method: RequestMethod.GET },
+      { path: 'health', method: RequestMethod.GET },
+    ],
+  });
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
