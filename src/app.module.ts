@@ -22,6 +22,20 @@ import { ScoringModule } from './scoring/scoring.module';
           };
         }
 
+        const dbUrl = config.get<string>('DB_URL');
+
+        if (dbUrl) {
+          return {
+            type: 'postgres' as const,
+            url: dbUrl,
+            autoLoadEntities: true,
+            migrations: ['dist/database/migrations/*.js'],
+            migrationsRun,
+            synchronize,
+            ssl: sslEnabled || dbUrl.includes('supabase') ? { rejectUnauthorized: false } : false,
+          };
+        }
+
         return {
           type: 'postgres' as const,
           host: config.get<string>('DB_HOST', 'localhost'),

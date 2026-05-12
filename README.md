@@ -31,10 +31,24 @@ npm install
 
 2. Copy environment values from `.env.example`.
 
-3. For PostgreSQL deployment, set:
+3. For PostgreSQL, choose one approach:
 
-- `DB_TYPE=postgres`
-- `TYPEORM_SYNC=false`
+**Option A: Full connection URL (recommended):**
+```bash
+DB_URL=postgresql://user:password@host:port/database
+TYPEORM_SYNC=false
+```
+
+**Option B: Individual settings:**
+```bash
+DB_TYPE=postgres
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+DB_DATABASE=skillbridge
+TYPEORM_SYNC=false
+```
 
 4. Apply the TypeORM migration:
 
@@ -128,32 +142,24 @@ Use this order: **Supabase first**, then **Vercel**.
 - Go to Supabase dashboard and create a new project.
 - Choose region close to your users and set a strong database password.
 
-2. Get Postgres connection details
-- In Supabase, open **Project Settings -> Database**.
-- Copy these values:
-  - Host
-  - Port
-  - Database name
-  - User
-  - Password
+2. Get PostgreSQL connection string
+- In Supabase, open **Project Settings -> Database -> Connection String**.
+- Copy the full PostgreSQL connection string (URI).
 
-3. Network and SSL expectations
-- Supabase Postgres requires SSL for external connections.
-- In this app, set `DB_SSL=true` for production.
+3. Prepare local migration run against Supabase
+- Update local `.env`:
+  ```
+  DB_URL=<your-supabase-connection-string>
+  TYPEORM_SYNC=false
+  ```
 
-4. Prepare local migration run against Supabase
-- Update local `.env` (or use terminal env vars) with Supabase DB values.
-- Keep:
-  - `DB_TYPE=postgres`
-  - `TYPEORM_SYNC=false`
-
-5. Run migrations once before Vercel deploy
+4. Run migrations once before Vercel deploy
 
 ```bash
 npm run migration:run
 ```
 
-6. Verify schema
+5. Verify schema
 - In Supabase SQL editor/table browser, confirm `score_results` table exists.
 
 ### B. Vercel Setup (App Hosting)
@@ -180,7 +186,17 @@ git push
 
 4. Add environment variables in Vercel
 
-Required:
+**Simplest approach (recommended):**
+- `NODE_ENV=production`
+- `JWT_SECRET=<strong-random-secret>`
+- `DB_URL=<your-supabase-connection-url>`
+
+To get your Supabase connection URL:
+- In Supabase dashboard, go to Project Settings > Database > Connection string
+- Copy the full PostgreSQL connection URL and paste it as DB_URL
+- This is all you need for Supabase + Vercel!
+
+**Alternative approach** (if you prefer individual settings):
 - `NODE_ENV=production`
 - `JWT_SECRET=<strong-random-secret>`
 - `DB_TYPE=postgres`
@@ -192,10 +208,6 @@ Required:
 - `DB_SSL=true`
 - `TYPEORM_SYNC=false`
 - `TYPEORM_MIGRATIONS_RUN=false`
-
-Optional aliases (supported by this app):
-- `DB_USER` as alternative to `DB_USERNAME`
-- `DB_NAME` as alternative to `DB_DATABASE`
 
 5. Deploy
 - Trigger the first production deployment in Vercel.
